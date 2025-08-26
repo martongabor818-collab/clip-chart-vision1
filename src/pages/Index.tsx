@@ -77,6 +77,12 @@ const Index = () => {
               <h1 className="text-2xl font-bold">Trading Pattern Analyzer</h1>
               <p className="text-muted-foreground">CLIP-powered screenshot analysis for Pocket Option</p>
             </div>
+            <a 
+              href="/templates" 
+              className="text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              Manage Templates →
+            </a>
           </div>
         </div>
       </header>

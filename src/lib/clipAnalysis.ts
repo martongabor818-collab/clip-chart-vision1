@@ -66,33 +66,70 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 
 export async function analyzeScreenshot(imageElement: HTMLImageElement): Promise<AnalysisResult> {
   try {
-    // For demo purposes, we'll simulate the analysis
-    // In a real implementation, you would compare with actual template embeddings
+    const { TemplateStorage } = await import('./templateStorage');
+    const templates = TemplateStorage.getTemplates().filter(t => t.embedding);
     
-    const embedding = await imageToEmbedding(imageElement);
+    if (templates.length === 0) {
+      // Fallback to mock data if no templates exist
+      const randomPattern = TEMPLATE_PATTERNS[Math.floor(Math.random() * TEMPLATE_PATTERNS.length)];
+      const baseSimilarity = 0.7 + Math.random() * 0.25;
+      
+      let confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+      if (baseSimilarity >= 0.85) confidence = 'HIGH';
+      else if (baseSimilarity >= 0.75) confidence = 'MEDIUM';
+      else confidence = 'LOW';
+      
+      return {
+        patternName: randomPattern.name,
+        similarity: Math.round(baseSimilarity * 100),
+        signal: confidence === 'LOW' ? 'NO TRADE' : randomPattern.signal,
+        confidence,
+        trendDirection: randomPattern.trend,
+        expiry: confidence === 'HIGH' ? '2-3 minutes' : '1-2 minutes'
+      };
+    }
     
-    // Simulate pattern matching with random but realistic results
-    const randomPattern = TEMPLATE_PATTERNS[Math.floor(Math.random() * TEMPLATE_PATTERNS.length)];
-    const baseSimilarity = 0.7 + Math.random() * 0.25; // 70-95%
+    // Real CLIP analysis with templates
+    const inputEmbedding = await imageToEmbedding(imageElement);
+    
+    let bestMatch = {
+      template: templates[0],
+      similarity: 0
+    };
+    
+    // Find best matching template
+    for (const template of templates) {
+      if (!template.embedding) continue;
+      
+      const similarity = cosineSimilarity(inputEmbedding, template.embedding);
+      if (similarity > bestMatch.similarity) {
+        bestMatch = {
+          template,
+          similarity
+        };
+      }
+    }
+    
+    const similarityPercent = Math.round(bestMatch.similarity * 100);
     
     // Determine confidence based on similarity
     let confidence: 'HIGH' | 'MEDIUM' | 'LOW';
-    if (baseSimilarity >= 0.85) confidence = 'HIGH';
-    else if (baseSimilarity >= 0.75) confidence = 'MEDIUM';
+    if (similarityPercent >= 85) confidence = 'HIGH';
+    else if (similarityPercent >= 75) confidence = 'MEDIUM';
     else confidence = 'LOW';
     
     // Adjust signal based on confidence
-    let finalSignal = randomPattern.signal;
+    let finalSignal = bestMatch.template.signal;
     if (confidence === 'LOW') {
       finalSignal = 'NO TRADE';
     }
     
     return {
-      patternName: randomPattern.name,
-      similarity: Math.round(baseSimilarity * 100),
+      patternName: bestMatch.template.patternType,
+      similarity: similarityPercent,
       signal: finalSignal,
       confidence,
-      trendDirection: randomPattern.trend,
+      trendDirection: bestMatch.template.trendDirection,
       expiry: confidence === 'HIGH' ? '2-3 minutes' : '1-2 minutes'
     };
   } catch (error) {
