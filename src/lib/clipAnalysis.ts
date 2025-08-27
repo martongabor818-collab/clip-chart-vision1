@@ -28,11 +28,19 @@ const TEMPLATE_PATTERNS = [
 async function initializeModel() {
   if (!clipModel) {
     console.log('Initializing CLIP model...');
-    clipModel = await pipeline(
-      'feature-extraction',
-      'Xenova/clip-vit-base-patch32',
-      { device: 'webgpu' }
-    );
+    try {
+      clipModel = await pipeline(
+        'feature-extraction',
+        'mixedbread-ai/mxbai-embed-xsmall-v1',
+        { device: 'webgpu' }
+      );
+    } catch (error) {
+      console.warn('WebGPU not available, falling back to CPU');
+      clipModel = await pipeline(
+        'feature-extraction',
+        'mixedbread-ai/mxbai-embed-xsmall-v1'
+      );
+    }
     console.log('CLIP model initialized');
   }
   return clipModel;
