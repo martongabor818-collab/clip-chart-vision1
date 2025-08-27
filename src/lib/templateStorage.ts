@@ -22,16 +22,9 @@ export class TemplateStorage {
 
   static saveTemplates(templates: Template[]): void {
     try {
-      const data = JSON.stringify(templates);
-      if (data.length > 4.5 * 1024 * 1024) { // 4.5MB safety limit
-        throw new Error('Data too large for localStorage');
-      }
-      localStorage.setItem(STORAGE_KEY, data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
     } catch (error) {
       console.error('Error saving templates:', error);
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        throw new Error('Storage quota exceeded');
-      }
       throw error;
     }
   }
@@ -47,41 +40,24 @@ export class TemplateStorage {
       // Create image URL
       const imageUrl = URL.createObjectURL(file);
       
-      // Generate embedding
-      const imageElement = await loadImageFromFile(file);
-      const embedding = await imageToEmbedding(imageElement);
-      
-      // Compress embedding to save space (reduce precision)
-      const compressedEmbedding = embedding.map(val => Math.round(val * 10000) / 10000);
-      
       const template: Template = {
         id: Date.now().toString(),
         name,
         patternType,
         imageUrl,
-        embedding: compressedEmbedding,
+        // Don't store embedding - it will be computed on-demand
         signal,
         trendDirection,
         createdAt: new Date()
       };
 
       const templates = this.getTemplates();
-      
-      // Check localStorage size before adding
-      const testStorage = JSON.stringify([...templates, template]);
-      if (testStorage.length > 4.5 * 1024 * 1024) { // 4.5MB limit
-        throw new Error('Storage quota exceeded. Please delete some templates first.');
-      }
-      
       templates.push(template);
       this.saveTemplates(templates);
       
       return template;
     } catch (error) {
       console.error('Error adding template:', error);
-      if (error instanceof Error && error.message.includes('quota')) {
-        throw new Error('Storage full. Please delete existing templates first.');
-      }
       throw new Error('Failed to add template');
     }
   }

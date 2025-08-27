@@ -75,7 +75,7 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 export async function analyzeScreenshot(imageElement: HTMLImageElement): Promise<AnalysisResult> {
   try {
     const { TemplateStorage } = await import('./templateStorage');
-    const templates = TemplateStorage.getTemplates().filter(t => t.embedding);
+    const templates = TemplateStorage.getTemplates();
     
     if (templates.length === 0) {
       // Fallback to mock data if no templates exist
@@ -97,7 +97,7 @@ export async function analyzeScreenshot(imageElement: HTMLImageElement): Promise
       };
     }
     
-    // Real CLIP analysis with templates
+    // Real CLIP analysis with templates (compute embeddings on-demand)
     const inputEmbedding = await imageToEmbedding(imageElement);
     
     let bestMatch = {
@@ -105,16 +105,19 @@ export async function analyzeScreenshot(imageElement: HTMLImageElement): Promise
       similarity: 0
     };
     
-    // Find best matching template
+    // Find best matching template by computing embeddings on the fly
     for (const template of templates) {
-      if (!template.embedding) continue;
-      
-      const similarity = cosineSimilarity(inputEmbedding, template.embedding);
-      if (similarity > bestMatch.similarity) {
-        bestMatch = {
-          template,
-          similarity
-        };
+      try {
+        const templateImage = await loadImageFromUrl(template.imageUrl);
+        const templateEmbedding = await imageToEmbedding(templateImage);
+        const similarity = cosineSimilarity(inputEmbedding, templateEmbedding);
+        
+        if (similarity > bestMatch.similarity) {
+          bestMatch = { template, similarity };
+        }
+      } catch (error) {
+        console.warn('Failed to process template:', template.name, error);
+        continue;
       }
     }
     
@@ -152,5 +155,15 @@ export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = URL.createObjectURL(file);
+  });
+}
+
+export function loadImageFromUrl(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.crossOrigin = 'anonymous';
+    img.src = url;
   });
 }
