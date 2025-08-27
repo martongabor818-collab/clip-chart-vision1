@@ -30,6 +30,12 @@ interface TemplateCardProps {
 
 export function TemplateCard({ template, onDelete, onEdit }: TemplateCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    console.warn('Failed to load template image:', template.imageUrl);
+    setImageError(true);
+  };
 
   const getSignalIcon = () => {
     switch (template.signal) {
@@ -62,12 +68,20 @@ export function TemplateCard({ template, onDelete, onEdit }: TemplateCardProps) 
     <>
       <Card className="overflow-hidden bg-gradient-card border shadow-card hover:shadow-lg transition-all duration-300">
         {/* Image */}
-        <div className="aspect-video bg-muted/20 overflow-hidden">
-          <img
-            src={template.imageUrl}
-            alt={template.name}
-            className="w-full h-full object-cover"
-          />
+        <div className="aspect-video bg-muted/20 overflow-hidden flex items-center justify-center">
+          {imageError ? (
+            <div className="text-center text-muted-foreground">
+              <div className="text-2xl mb-2">📊</div>
+              <div className="text-xs">Image unavailable</div>
+            </div>
+          ) : (
+            <img
+              src={template.imageUrl}
+              alt={template.name}
+              className="w-full h-full object-cover"
+              onError={handleImageError}
+            />
+          )}
         </div>
 
         {/* Content */}
