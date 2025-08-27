@@ -272,7 +272,7 @@ export function TemplateManager() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="p-4 bg-gradient-card border shadow-card">
           <div className="text-2xl font-bold">{templates.length}</div>
           <div className="text-sm text-muted-foreground">Total Templates</div>
@@ -292,6 +292,12 @@ export function TemplateManager() {
             {templates.filter(t => t.signal === 'SELL').length}
           </div>
           <div className="text-sm text-muted-foreground">Sell Signals</div>
+        </Card>
+        <Card className="p-4 bg-gradient-card border shadow-card">
+          <div className="text-sm font-bold text-muted-foreground">Storage</div>
+          <div className="text-xs text-muted-foreground">
+            {Math.round((JSON.stringify(templates).length / (1024 * 1024)) * 100) / 100} MB / 5 MB
+          </div>
         </Card>
       </div>
 
