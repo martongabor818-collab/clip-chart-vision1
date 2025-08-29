@@ -1,181 +1,179 @@
-import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain, TrendingUp, Zap, Shield } from 'lucide-react';
-import { DropZone } from '@/components/DropZone';
-import { AnalysisResult } from '@/components/AnalysisResult';
-import { analyzeScreenshot, loadImageFromFile } from '@/lib/clipAnalysis';
-import { useToast } from '@/hooks/use-toast';
-import type { AnalysisResult as AnalysisResultType } from '@/lib/clipAnalysis';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, BarChart3, Zap, Shield, ArrowRight, Target, Clock, DollarSign } from 'lucide-react';
+import { tradingStrategies } from '@/data/tradingStrategies';
+import { otcPairs } from '@/data/otcPairs';
 
 const Index = () => {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<AnalysisResultType | null>(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
-  const { toast } = useToast();
-
-  const handleFileSelect = async (file: File) => {
-    try {
-      setIsAnalyzing(true);
-      setResult(null);
-      
-      // Create preview URL
-      const imageUrl = URL.createObjectURL(file);
-      setUploadedImageUrl(imageUrl);
-      
-      // Load and analyze image
-      const imageElement = await loadImageFromFile(file);
-      const analysisResult = await analyzeScreenshot(imageElement);
-      
-      setResult(analysisResult);
-      
-      toast({
-        title: "Analysis Complete!",
-        description: `Pattern detected: ${analysisResult.patternName} with ${analysisResult.similarity}% similarity`,
-      });
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      toast({
-        title: "Analysis Failed",
-        description: "Please try again with a different image",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleNewAnalysis = () => {
-    setResult(null);
-    setUploadedImageUrl('');
-  };
-
-  if (result) {
-    return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-4xl mx-auto">
-          <AnalysisResult 
-            result={result} 
-            onNewAnalysis={handleNewAnalysis}
-            uploadedImage={uploadedImageUrl}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Brain className="w-8 h-8 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BarChart3 className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">PocketOption Trading Bot</h1>
+                <p className="text-muted-foreground">Indikátor alapú automatikus trading signalok</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Trading Pattern Analyzer</h1>
-              <p className="text-muted-foreground">CLIP-powered screenshot analysis for Pocket Option</p>
-            </div>
-            <div className="flex gap-6">
-              <a 
-                href="/templates" 
-                className="text-primary hover:text-primary/80 transition-colors font-medium"
-              >
-                Manage Templates →
-              </a>
-              <a 
-                href="/trading" 
-                className="text-green-600 hover:text-green-700 transition-colors font-medium"
-              >
-                Trading Signals →
-              </a>
+            <div className="flex gap-4">
+              <Button asChild variant="outline">
+                <a href="/templates">
+                  Manage Templates
+                </a>
+              </Button>
+              <Button asChild className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
+                <a href="/trading" className="flex items-center gap-2">
+                  Kereskedés indítása
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-12">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-6">
+            Automatikus Trading Bot <span className="text-primary">PocketOption</span>-höz
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Haladó technikai indikátorok és trading stratégiák alapján automatikus BUY/SELL signalok.
+            Támogatja a scalping, swing és day trading módszereket.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button asChild size="lg" className="bg-gradient-primary text-primary-foreground">
+              <a href="/trading" className="flex items-center gap-2">
+                Trading indítása
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <a href="/templates">Template kezelés</a>
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+          <Card className="p-6 text-center bg-gradient-card border shadow-card">
+            <div className="p-3 rounded-full bg-primary/10 w-fit mx-auto mb-4">
+              <Target className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">{tradingStrategies.length}</h3>
+            <p className="text-muted-foreground">Elérhető stratégia</p>
+          </Card>
+          
+          <Card className="p-6 text-center bg-gradient-card border shadow-card">
+            <div className="p-3 rounded-full bg-success/10 w-fit mx-auto mb-4">
+              <TrendingUp className="w-8 h-8 text-success" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">{otcPairs.length}</h3>
+            <p className="text-muted-foreground">OTC trading pár</p>
+          </Card>
+          
+          <Card className="p-6 text-center bg-gradient-card border shadow-card">
+            <div className="p-3 rounded-full bg-warning/10 w-fit mx-auto mb-4">
+              <Clock className="w-8 h-8 text-warning" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">1-30</h3>
+            <p className="text-muted-foreground">Perces timeframe-ek</p>
+          </Card>
+          
+          <Card className="p-6 text-center bg-gradient-card border shadow-card">
+            <div className="p-3 rounded-full bg-primary/10 w-fit mx-auto mb-4">
+              <DollarSign className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Demo/Live</h3>
+            <p className="text-muted-foreground">Trading módok</p>
+          </Card>
+        </div>
+
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Upload Section */}
+          {/* Strategies Section */}
           <div className="space-y-6">
             <div>
-              <h2 className="text-3xl font-bold mb-4">
-                AI-Powered Pattern Recognition
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                Upload your trading screenshots and get instant pattern analysis with 
-                confidence scores and trading signals.
+              <h3 className="text-2xl font-bold mb-4">Elérhető Trading Stratégiák</h3>
+              <p className="text-muted-foreground mb-6">
+                Válassz a különböző időtávok és kockázati szintek közül
               </p>
             </div>
 
-            <DropZone onFileSelect={handleFileSelect} isLoading={isAnalyzing} />
-
-            {/* Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="p-4 bg-gradient-card border shadow-card">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-6 h-6 text-success" />
-                  <div>
-                    <h3 className="font-semibold">95% Accuracy</h3>
-                    <p className="text-sm text-muted-foreground">CLIP embedding analysis</p>
+            <div className="space-y-4">
+              {tradingStrategies.slice(0, 3).map((strategy) => (
+                <Card key={strategy.id} className="p-4 bg-gradient-card border shadow-card">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-2">{strategy.name}</h4>
+                      <p className="text-sm text-muted-foreground mb-3">{strategy.description}</p>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={strategy.type === 'scalping' ? 'destructive' : strategy.type === 'swing' ? 'secondary' : 'default'}>
+                          {strategy.type.toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline">
+                          {strategy.winRate}% win rate
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-gradient-card border shadow-card">
-                <div className="flex items-center gap-3">
-                  <Zap className="w-6 h-6 text-warning" />
-                  <div>
-                    <h3 className="font-semibold">Real-time</h3>
-                    <p className="text-sm text-muted-foreground">Instant analysis</p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              ))}
             </div>
+
+            <Button asChild variant="outline" className="w-full">
+              <a href="/trading">Összes stratégia megtekintése →</a>
+            </Button>
           </div>
 
-          {/* Info Section */}
+          {/* How It Works */}
           <div className="space-y-6">
             <Card className="p-6 bg-gradient-card border shadow-card">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
-                How It Works
+                Hogyan működik?
               </h3>
               <div className="space-y-4">
                 <div className="flex gap-3">
                   <Badge className="bg-primary/10 text-primary">1</Badge>
                   <div>
-                    <h4 className="font-semibold">Template Embedding</h4>
+                    <h4 className="font-semibold">PocketOption bejelentkezés</h4>
                     <p className="text-sm text-muted-foreground">
-                      CLIP model creates vector embeddings from pattern templates
+                      Add meg az SSID-t a PocketOption fiókodból
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <Badge className="bg-primary/10 text-primary">2</Badge>
                   <div>
-                    <h4 className="font-semibold">Screenshot Analysis</h4>
+                    <h4 className="font-semibold">Stratégia kiválasztása</h4>
                     <p className="text-sm text-muted-foreground">
-                      Your image is converted to the same vector space
+                      Válassz trading stratégiát és timeframe-et
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <Badge className="bg-primary/10 text-primary">3</Badge>
                   <div>
-                    <h4 className="font-semibold">Similarity Matching</h4>
+                    <h4 className="font-semibold">Indikátor elemzés</h4>
                     <p className="text-sm text-muted-foreground">
-                      Cosine similarity finds the closest pattern match
+                      RSI, MACD, Moving Averages, Bollinger Bands elemzése
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <Badge className="bg-primary/10 text-primary">4</Badge>
                   <div>
-                    <h4 className="font-semibold">Trading Signal</h4>
+                    <h4 className="font-semibold">Automatikus trading</h4>
                     <p className="text-sm text-muted-foreground">
-                      BUY/SELL/NO TRADE based on confidence and trend
+                      BUY/SELL signalok és automatikus trade végrehajtás
                     </p>
                   </div>
                 </div>
@@ -183,18 +181,18 @@ const Index = () => {
             </Card>
 
             <Card className="p-6 bg-gradient-card border shadow-card">
-              <h3 className="text-xl font-bold mb-4">Supported Patterns</h3>
+              <h3 className="text-xl font-bold mb-4">Támogatott indikátorok</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  'Bullish Engulfing',
-                  'Bearish Engulfing', 
-                  'Hammer',
-                  'Shooting Star',
-                  'Pin Bar',
-                  'Doji'
-                ].map((pattern) => (
-                  <Badge key={pattern} variant="secondary" className="justify-center">
-                    {pattern}
+                  'RSI',
+                  'MACD',
+                  'Moving Averages',
+                  'Bollinger Bands',
+                  'Stochastic',
+                  'Support/Resistance'
+                ].map((indicator) => (
+                  <Badge key={indicator} variant="secondary" className="justify-center">
+                    {indicator}
                   </Badge>
                 ))}
               </div>
