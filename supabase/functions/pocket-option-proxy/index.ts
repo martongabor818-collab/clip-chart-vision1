@@ -34,6 +34,18 @@ serve(async (req) => {
 
     console.log('PocketOption API response status:', response.status);
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('PocketOption API error:', errorText);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `API Error: ${response.status} - ${errorText.substring(0, 200)}...`,
+        status: response.status
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     const data = await response.json();
     
     return new Response(JSON.stringify({
