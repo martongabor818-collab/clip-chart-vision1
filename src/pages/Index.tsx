@@ -4,40 +4,13 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, BarChart3, Zap, Shield, ArrowRight, Target, Clock, DollarSign } from 'lucide-react';
 import { tradingStrategies } from '@/data/tradingStrategies';
 import { otcPairs } from '@/data/otcPairs';
+import Navigation from '@/components/Navigation';
 
 const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <BarChart3 className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">PocketOption Trading Bot</h1>
-                <p className="text-muted-foreground">Indikátor alapú automatikus trading signalok</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <Button asChild variant="outline">
-                <a href="/templates">
-                  Manage Templates
-                </a>
-              </Button>
-              <Button asChild className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
-                <a href="/trading" className="flex items-center gap-2">
-                  Kereskedés indítása
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero Section */}

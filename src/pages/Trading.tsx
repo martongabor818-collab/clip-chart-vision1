@@ -14,6 +14,7 @@ import { TechnicalIndicators } from '@/lib/indicators';
 import { PocketOptionAPI } from '@/lib/pocketOptionAPI';
 import PocketOptionLogin from '@/components/PocketOptionLogin';
 import { toast } from '@/hooks/use-toast';
+import Navigation from '@/components/Navigation';
 
 const Trading = () => {
   const [selectedStrategy, setSelectedStrategy] = useState<TradingStrategy | null>(null);
@@ -151,11 +152,13 @@ const Trading = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold gradient-text">Trading Signals</h1>
+          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Trading Signals</h1>
           <p className="text-muted-foreground">
             Indikátor alapú elemzés és automatikus trading signalok
           </p>
