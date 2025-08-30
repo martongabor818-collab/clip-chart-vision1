@@ -2,66 +2,82 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CheckCircle2, ExternalLink, Wifi, WifiOff } from 'lucide-react';
 import { PocketOptionAPI } from '@/lib/pocketOptionAPI';
+import { PocketOptionWebSocket } from '@/lib/pocketOptionWebSocket';
 import { PocketOptionCredentials } from '@/types/trading';
 import { toast } from '@/hooks/use-toast';
 
 interface PocketOptionLoginProps {
-  onConnectionChange: (connected: boolean, api?: PocketOptionAPI) => void;
+  onConnectionChange: (connected: boolean, api?: PocketOptionAPI | PocketOptionWebSocket) => void;
 }
 
 const PocketOptionLogin = ({ onConnectionChange }: PocketOptionLoginProps) => {
   const [ssid, setSsid] = useState('');
   const [isDemo, setIsDemo] = useState(true);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [currentBalance, setCurrentBalance] = useState<number | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [useWebSocket, setUseWebSocket] = useState(true);
 
   const handleConnect = async () => {
     if (!ssid.trim()) {
       toast({
         title: "Hiányzó SSID",
-        description: "Add meg a PocketOption SSID-t!",
+        description: "Kérlek add meg az SSID-t!",
         variant: "destructive"
       });
       return;
     }
 
     setIsConnecting(true);
-    
+
     try {
       const credentials: PocketOptionCredentials = {
         ssid: ssid.trim(),
         demo: isDemo
       };
-      
-      const api = new PocketOptionAPI(credentials);
-      const connectionValid = await api.validateConnection();
-      
-      if (connectionValid) {
+
+      let api: PocketOptionAPI | PocketOptionWebSocket;
+      let connected = false;
+
+      if (useWebSocket || ssid.startsWith('42[')) {
+        // WebSocket alapú kapcsolat
+        console.log('Using WebSocket connection...');
+        api = new PocketOptionWebSocket(credentials);
+        connected = await (api as PocketOptionWebSocket).connect();
+      } else {
+        // HTTP alapú kapcsolat
+        console.log('Using HTTP connection...');
+        api = new PocketOptionAPI(credentials);
+        connected = await (api as PocketOptionAPI).validateConnection();
+      }
+
+      if (connected) {
+        setIsConnected(true);
+        
+        // Balance lekérése
         const balance = await api.getBalance();
         setCurrentBalance(balance);
-        setIsConnected(true);
+
         onConnectionChange(true, api);
-        setIsDialogOpen(false);
         
         toast({
-          title: "Sikeres csatlakozás",
-          description: `Egyenleg: $${balance.toFixed(2)} (${isDemo ? 'Demo' : 'Live'})`,
+          title: "Sikeres csatlakozás!",
+          description: `Csatlakozva ${isDemo ? 'demo' : 'live'} módban. Egyenleg: $${balance}`,
         });
       } else {
-        throw new Error('Invalid SSID or connection failed');
+        throw new Error('Sikertelen kapcsolódás');
       }
     } catch (error) {
+      console.error('Connection failed:', error);
       toast({
         title: "Kapcsolódási hiba",
-        description: "Ellenőrizd az SSID-t és próbáld újra",
+        description: "Nem sikerült csatlakozni a PocketOption-höz. Ellenőrizd az SSID-t!",
         variant: "destructive"
       });
     } finally {
@@ -82,20 +98,25 @@ const PocketOptionLogin = ({ onConnectionChange }: PocketOptionLoginProps) => {
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button 
-          variant={isConnected ? "outline" : "default"}
-          className={isConnected ? "border-green-500 text-green-600" : ""}
+          variant={isConnected ? "default" : "outline"} 
+          className={isConnected ? "bg-gradient-primary text-primary-foreground shadow-glow-success" : ""}
         >
           {isConnected ? (
             <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Csatlakozva ({isDemo ? 'Demo' : 'Live'})
+              <Wifi className="h-4 w-4 mr-2" />
+              Csatlakozva
+              {currentBalance !== null && (
+                <Badge variant="secondary" className="ml-2">
+                  ${currentBalance.toFixed(2)} ({isDemo ? 'Demo' : 'Live'})
+                </Badge>
+              )}
             </>
           ) : (
             <>
-              <AlertCircle className="h-4 w-4 mr-2" />
+              <WifiOff className="h-4 w-4 mr-2" />
               PocketOption Bejelentkezés
             </>
           )}
@@ -118,7 +139,7 @@ const PocketOptionLogin = ({ onConnectionChange }: PocketOptionLoginProps) => {
                 <Input
                   id="ssid"
                   type="password"
-                  placeholder="Másold be a PocketOption SSID-t"
+                  placeholder="Másold be a PocketOption SSID-t vagy WebSocket auth üzenetet"
                   value={ssid}
                   onChange={(e) => setSsid(e.target.value)}
                 />
@@ -132,27 +153,36 @@ const PocketOptionLogin = ({ onConnectionChange }: PocketOptionLoginProps) => {
                 />
                 <Label htmlFor="demo-mode">Demo mód</Label>
               </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="websocket-mode"
+                  checked={useWebSocket}
+                  onCheckedChange={setUseWebSocket}
+                />
+                <Label htmlFor="websocket-mode">WebSocket kapcsolat</Label>
+              </div>
               
               <Separator />
               
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">SSID megszerzése:</h4>
-                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                   <li>Jelentkezz be a <a href="https://po.trade" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PocketOption</a> weboldalára</li>
-                   <li>Nyisd meg a böngésző fejlesztői eszközöket (F12)</li>
-                   <li>Menj az Application/Storage → Cookies oldalra</li>
-                   <li>Keresd meg az "ssid" cookie-t és másold ki az értékét</li>
-                   <li className="text-xs italic">Alternatíva: Network fülön keress WebSocket auth üzeneteket</li>
-                 </ol>
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   onClick={() => window.open('https://po.trade', '_blank')}
-                   className="w-full"
-                 >
-                   <ExternalLink className="h-4 w-4 mr-2" />
-                   PocketOption megnyitása
-                 </Button>
+                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Jelentkezz be a <a href="https://po.trade" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PocketOption</a> weboldalára</li>
+                  <li>Nyisd meg a böngésző fejlesztői eszközöket (F12)</li>
+                  <li>Menj az Application/Storage → Cookies oldalra</li>
+                  <li>Keresd meg az "ssid" cookie-t és másold ki az értékét</li>
+                  <li className="text-xs italic">Alternatíva: Network fülön keress WebSocket auth üzeneteket (42["auth",...]) és másold ki a teljes üzenetet</li>
+                </ol>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open('https://po.trade', '_blank')}
+                  className="w-full"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  PocketOption megnyitása
+                </Button>
               </div>
               
               <Button 
@@ -174,6 +204,10 @@ const PocketOptionLogin = ({ onConnectionChange }: PocketOptionLoginProps) => {
                 <div className="flex justify-between">
                   <span className="text-sm">Mód:</span>
                   <span className="text-sm font-medium">{isDemo ? 'Demo' : 'Live'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Típus:</span>
+                  <span className="text-sm font-medium">{useWebSocket ? 'WebSocket' : 'HTTP'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">Egyenleg:</span>

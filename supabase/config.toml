@@ -1,1 +1,7 @@
 project_id = "gpfxbshjwscrberhqpmd"
+
+[functions.pocket-option-proxy]
+verify_jwt = false
+
+[functions.pocket-option-websocket]
+verify_jwt = false
