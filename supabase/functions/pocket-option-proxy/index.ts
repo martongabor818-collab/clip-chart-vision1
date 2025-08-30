@@ -15,15 +15,33 @@ serve(async (req) => {
   try {
     const { endpoint, method = 'GET', ssid, body } = await req.json();
     
-    console.log('PocketOption API request:', { endpoint, method, ssid: ssid?.substring(0, 10) + '...' });
+    console.log('PocketOption API request:', { endpoint, method, ssid: ssid?.substring(0, 20) + '...' });
+    
+    // SSID feldolgozás - ha JSON formátumban van, dekódoljuk
+    let cookieValue = ssid;
+    if (ssid && ssid.startsWith('42[')) {
+      try {
+        // WebSocket message formátum dekódolása
+        const parsed = JSON.parse(ssid.substring(2));
+        if (parsed[0] === 'auth' && parsed[1]?.sessionToken) {
+          cookieValue = parsed[1].sessionToken;
+          console.log('Extracted session token from SSID');
+        }
+      } catch (e) {
+        console.log('Failed to parse SSID, using as is');
+      }
+    }
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://po.trade/cabinet/demo-quick-high-low',
     };
     
-    if (ssid) {
-      headers['Cookie'] = `ssid=${ssid}`;
+    if (cookieValue) {
+      headers['Cookie'] = `ssid=${cookieValue}`;
     }
 
     const response = await fetch(`https://po.trade${endpoint}`, {

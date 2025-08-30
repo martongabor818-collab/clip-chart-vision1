@@ -137,21 +137,22 @@ const PocketOptionLogin = ({ onConnectionChange }: PocketOptionLoginProps) => {
               
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">SSID megszerzése:</h4>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Jelentkezz be a PocketOption weboldalára</li>
-                  <li>Nyisd meg a böngésző fejlesztői eszközöket (F12)</li>
-                  <li>Menj az Application/Storage → Cookies oldalra</li>
-                  <li>Keresd meg az "ssid" cookie-t és másold ki az értékét</li>
-                </ol>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open('https://pocketoption.com', '_blank')}
-                  className="w-full"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  PocketOption megnyitása
-                </Button>
+                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                   <li>Jelentkezz be a <a href="https://po.trade" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PocketOption</a> weboldalára</li>
+                   <li>Nyisd meg a böngésző fejlesztői eszközöket (F12)</li>
+                   <li>Menj az Application/Storage → Cookies oldalra</li>
+                   <li>Keresd meg az "ssid" cookie-t és másold ki az értékét</li>
+                   <li className="text-xs italic">Alternatíva: Network fülön keress WebSocket auth üzeneteket</li>
+                 </ol>
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   onClick={() => window.open('https://po.trade', '_blank')}
+                   className="w-full"
+                 >
+                   <ExternalLink className="h-4 w-4 mr-2" />
+                   PocketOption megnyitása
+                 </Button>
               </div>
               
               <Button 

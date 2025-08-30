@@ -35,18 +35,27 @@ export class PocketOptionAPI {
 
   async validateConnection(): Promise<boolean> {
     try {
-      // Próbáljuk meg az egyszerűbb endpoint-ot
-      const result = await this.callAPI('/api/profile');
-      console.log('Validation result:', result);
+      // Próbáljuk meg több különböző endpoint-ot
+      const endpoints = [
+        '/cabinet/get-balance', 
+        '/cabinet/profile',
+        '/api/profile',
+        '/cabinet/demo-quick-high-low'
+      ];
       
-      if (!result.success) {
-        // Ha ez sem működik, próbáljunk alternatív endpoint-ot
-        const altResult = await this.callAPI('/cabinet/demo-quick-high-low');
-        console.log('Alternative validation result:', altResult);
-        return altResult.success;
+      for (const endpoint of endpoints) {
+        console.log(`Testing endpoint: ${endpoint}`);
+        const result = await this.callAPI(endpoint);
+        console.log(`Result for ${endpoint}:`, result);
+        
+        if (result.success && result.data) {
+          console.log(`Connection validated with endpoint: ${endpoint}`);
+          return true;
+        }
       }
       
-      return true;
+      console.log('All validation endpoints failed');
+      return false;
     } catch (error) {
       console.error('Connection validation failed:', error);
       return false;
@@ -55,18 +64,31 @@ export class PocketOptionAPI {
 
   async getBalance(): Promise<number> {
     try {
-      // Próbáljuk meg különböző endpoint-okat
-      let result = await this.callAPI('/api/profile');
+      // Próbáljuk meg különböző balance endpoint-okat
+      const endpoints = [
+        '/cabinet/get-balance',
+        '/api/balance', 
+        '/cabinet/balance',
+        '/api/profile'
+      ];
       
-      if (!result.success) {
-        result = await this.callAPI('/cabinet/balance');
-      }
-      
-      console.log('Balance result:', result);
-      
-      if (result.success && result.data) {
-        // Keressük meg a balance értéket a válaszban
-        return result.data.balance || result.data.demo_balance || result.data.live_balance || 10000; // default demo balance
+      for (const endpoint of endpoints) {
+        const result = await this.callAPI(endpoint);
+        console.log(`Balance result for ${endpoint}:`, result);
+        
+        if (result.success && result.data) {
+          // Keressük meg a balance értéket a válaszban
+          const balance = result.data.balance || 
+                         result.data.demo_balance || 
+                         result.data.live_balance ||
+                         result.data.amount ||
+                         (this.demo ? result.data.demo : result.data.live);
+          
+          if (typeof balance === 'number') {
+            console.log(`Found balance: ${balance} from endpoint: ${endpoint}`);
+            return balance;
+          }
+        }
       }
       
       return 10000; // default demo balance
